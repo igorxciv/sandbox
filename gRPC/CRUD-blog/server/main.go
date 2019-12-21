@@ -4,9 +4,12 @@ import (
 	"context"
 	blogpb "crud-proto/proto"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"log"
 	"net"
 	"os"
@@ -15,8 +18,30 @@ import (
 
 type BlogServiceServer struct{}
 
+type BlogItem struct {
+	ID       primitive.ObjectID `bson:"_id,omitempty"`
+	AuthorID string             `bson:"author_id"`
+	Content  string             `bson:"content"`
+	Title    string             `bson:"title"`
+}
+
 func (s *BlogServiceServer) CreateBlog(ctx context.Context, req *blogpb.CreateBlogReq) (*blogpb.CreateBlogRes, error) {
-	return nil, nil
+	blog := req.GetBlog()
+	data := BlogItem{
+		AuthorID: blog.AuthorId,
+		Content:  blog.Content,
+		Title:    blog.Title,
+	}
+	result, err := blogdb.InsertOne(mongoCtx, data)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, fmt.Sprintf("Internal error: %v", err))
+	}
+
+	oid := result.InsertedID.(primitive.ObjectID)
+	blog.Id = oid.Hex()
+	return &blogpb.CreateBlogRes{
+		Blog: blog,
+	}, nil
 }
 
 func (s *BlogServiceServer) ReadBlog(ctx context.Context, req *blogpb.ReadBlogReq) (*blogpb.ReadBlogRes, error) {
