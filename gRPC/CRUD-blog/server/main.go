@@ -115,7 +115,7 @@ func (s *BlogServiceServer) DeleteBlog(ctx context.Context, req *blogpb.DeleteBl
 }
 
 func (s *BlogServiceServer) ListBlog(req *blogpb.ListBlogReq, stream blogpb.BlogService_ListBlogServer) error {
-	data := BlogItem{}
+	data := &BlogItem{}
 	cursor, err := blogdb.Find(mongoCtx, bson.M{})
 	if err != nil {
 		return status.Errorf(codes.Internal, fmt.Sprintf("Unknown internal error: %v", err))

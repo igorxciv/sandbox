@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/jessevdk/go-flags"
 	"google.golang.org/grpc"
+	"io"
 	"log"
 	"os"
 	"time"
@@ -55,4 +56,20 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("Blog created: %s\n", res.Blog.Id)
+
+	// ADD
+	stream, err := client.ListBlog(context.TODO(), &blogpb.ListBlogReq{})
+	if err != nil {
+		panic(err)
+	}
+
+	for {
+		res, err := stream.Recv()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			panic(err)
+		}
+		fmt.Println(res.GetBlog())
+	}
 }
