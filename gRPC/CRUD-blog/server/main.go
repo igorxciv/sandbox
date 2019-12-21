@@ -9,6 +9,8 @@ import (
 	"google.golang.org/grpc"
 	"log"
 	"net"
+	"os"
+	"os/signal"
 )
 
 type BlogServiceServer struct{}
@@ -67,4 +69,31 @@ func main() {
 	} else {
 		log.Println("Connected to MongoDB!")
 	}
+
+	blogdb = db.Database("mydb").Collection("blog")
+
+	go func() {
+		if err := s.Serve(listener); err != nil {
+			log.Fatalf("Failed to serve: %v", err)
+		}
+	}()
+	fmt.Println("Server successfully started on port :50051")
+
+	c := make(chan os.Signal)
+
+	signal.Notify(c, os.Interrupt)
+
+	<-c
+
+	fmt.Println("\nStopping the server...")
+	s.Stop()
+	if err := listener.Close(); err != nil {
+		log.Fatalf("Failed to close TCP connection: %v", err)
+	}
+	fmt.Println("Closing MongoDB connection...")
+
+	if err := db.Disconnect(mongoCtx); err != nil {
+		log.Fatalf("Failed to close MongoDB connection: %v", err)
+	}
+	fmt.Println("Done.")
 }
