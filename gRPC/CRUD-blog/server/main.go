@@ -114,8 +114,38 @@ func (s *BlogServiceServer) DeleteBlog(ctx context.Context, req *blogpb.DeleteBl
 	}, nil
 }
 
-func (s *BlogServiceServer) ListBlog(ctx context.Context, req *blogpb.ListBlogReq) (*blogpb.ListBlogRes, error) {
-	return nil, nil
+func (s *BlogServiceServer) ListBlog(req *blogpb.ListBlogReq, stream blogpb.BlogService_ListBlogServer) error {
+	data := BlogItem{}
+	cursor, err := blogdb.Find(mongoCtx, bson.M{})
+	if err != nil {
+		return status.Errorf(codes.Internal, fmt.Sprintf("Unknown internal error: %v", err))
+	}
+	defer func() {
+		if err := cursor.Close(mongoCtx); err != nil {
+			log.Fatalf("Error closing cursor: %v", err)
+		}
+	}()
+
+	for cursor.Next(mongoCtx) {
+		if err := cursor.Decode(data); err != nil {
+			return status.Errorf(codes.Unavailable, fmt.Sprintf("Could not decode data: %v", err))
+		}
+		if err := stream.Send(&blogpb.ListBlogRes{
+			Blog: &blogpb.Blog{
+				Id:       data.ID.Hex(),
+				AuthorId: data.AuthorID,
+				Title:    data.Title,
+				Content:  data.Content,
+			},
+		}); err != nil {
+			log.Fatalf("Failed to send blog: %v", err)
+		}
+	}
+
+	if err := cursor.Err(); err != nil {
+		return status.Errorf(codes.Internal, fmt.Sprintf("Unknown cursor error: %v", err))
+	}
+	return nil
 }
 
 var db *mongo.Client

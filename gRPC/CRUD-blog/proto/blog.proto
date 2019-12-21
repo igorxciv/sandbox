@@ -7,7 +7,7 @@ service BlogService {
   rpc ReadBlog(ReadBlogReq) returns (ReadBlogRes);
   rpc UpdateBlog(UpdateBlogReq) returns (UpdateBlogRes);
   rpc DeleteBlog(DeleteBlogReq) returns (DeleteBlogRes);
-  rpc ListBlog(ListBlogReq) returns (ListBlogRes);
+  rpc ListBlog(ListBlogReq) returns (stream ListBlogRes);
 }
 
 message Blog {
