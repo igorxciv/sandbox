@@ -73,7 +73,18 @@ func (s *BlogServiceServer) UpdateBlog(ctx context.Context, req *blogpb.UpdateBl
 }
 
 func (s *BlogServiceServer) DeleteBlog(ctx context.Context, req *blogpb.DeleteBlogReq) (*blogpb.DeleteBlogRes, error) {
-	return nil, nil
+	oid, err := primitive.ObjectIDFromHex(req.GetId())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Could not conver to ObjectID: %v", err))
+	}
+
+	_, err = blogdb.DeleteOne(mongoCtx, bson.M{"_id": oid})
+	if err != nil {
+		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("Could not find blog with ObjectID: %v", err))
+	}
+	return &blogpb.DeleteBlogRes{
+		Success: true,
+	}, nil
 }
 
 func (s *BlogServiceServer) ListBlog(ctx context.Context, req *blogpb.ListBlogReq) (*blogpb.ListBlogRes, error) {
