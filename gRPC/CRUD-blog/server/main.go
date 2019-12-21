@@ -4,6 +4,7 @@ import (
 	"context"
 	blogpb "crud-proto/proto"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -45,7 +46,26 @@ func (s *BlogServiceServer) CreateBlog(ctx context.Context, req *blogpb.CreateBl
 }
 
 func (s *BlogServiceServer) ReadBlog(ctx context.Context, req *blogpb.ReadBlogReq) (*blogpb.ReadBlogRes, error) {
-	return nil, nil
+	oid, err := primitive.ObjectIDFromHex(req.GetId())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Could not convert to ObjectID: %v", err))
+	}
+
+	result := blogdb.FindOne(mongoCtx, bson.M{"_id": oid})
+	data := BlogItem{}
+
+	if err := result.Decode(&data); err != nil {
+		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("Could not find blog with ObjectID: %v", err))
+	}
+	response := &blogpb.ReadBlogRes{
+		Blog: &blogpb.Blog{
+			Id:       oid.Hex(),
+			AuthorId: data.AuthorID,
+			Title:    data.Title,
+			Content:  data.Content,
+		},
+	}
+	return response, nil
 }
 
 func (s *BlogServiceServer) UpdateBlog(ctx context.Context, req *blogpb.UpdateBlogReq) (*blogpb.UpdateBlogRes, error) {
