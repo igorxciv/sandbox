@@ -43,5 +43,16 @@ func init() {
 }
 
 func main() {
-
+	blog := &blogpb.Blog{
+		AuthorId: opts.Author,
+		Title:    opts.Title,
+		Content:  opts.Content,
+	}
+	res, err := client.CreateBlog(context.TODO(), &blogpb.CreateBlogReq{
+		Blog: blog,
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Blog created: %s\n", res.Blog.Id)
 }
