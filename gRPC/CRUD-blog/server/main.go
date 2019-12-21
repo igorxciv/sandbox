@@ -69,7 +69,34 @@ func (s *BlogServiceServer) ReadBlog(ctx context.Context, req *blogpb.ReadBlogRe
 }
 
 func (s *BlogServiceServer) UpdateBlog(ctx context.Context, req *blogpb.UpdateBlogReq) (*blogpb.UpdateBlogRes, error) {
-	return nil, nil
+	blog := req.GetBlog()
+
+	oid, err := primitive.ObjectIDFromHex(blog.GetId())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Could not convert supplied blog id to ObjectID: %v", err))
+	}
+
+	update := bson.M{
+		"author_id": blog.GetAuthorId(),
+		"content":   blog.GetContent(),
+		"title":     blog.GetTitle(),
+	}
+	filter := bson.M{"_id": oid}
+
+	result := blogdb.FindOneAndUpdate(mongoCtx, filter, update)
+
+	decode := BlogItem{}
+	if err := result.Decode(&decode); err != nil {
+		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("Could not find blog with supplied ID: %v", err))
+	}
+	return &blogpb.UpdateBlogRes{
+		Blog: &blogpb.Blog{
+			Id:       decode.ID.Hex(),
+			AuthorId: decode.AuthorID,
+			Title:    decode.Title,
+			Content:  decode.Content,
+		},
+	}, nil
 }
 
 func (s *BlogServiceServer) DeleteBlog(ctx context.Context, req *blogpb.DeleteBlogReq) (*blogpb.DeleteBlogRes, error) {
