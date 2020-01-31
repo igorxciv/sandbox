@@ -3,7 +3,7 @@ function selection_sort(vector) {
     let minIdx = i;
     for (let j = i + 1; j < l; j++) {
       if (vector[minIdx] > vector[j]) {
-        minIdx = j
+        minIdx = j;
       }
     }
     if (minIdx !== i) {
