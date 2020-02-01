@@ -9,22 +9,23 @@ function merge_sort(arr) {
 }
 
 function merge(left, right) {
-  const result = [];
-  let leftIdx = 0, rightIdx = 0;
+  let leftIdx = 0,
+    rightIdx = 0,
+    result = [];
 
-  while(leftIdx < left.length && rightIdx < right.length) {
-    if (left[leftIdx] < right[rightIdx]) {
-      result.push(left[leftIdx]);
-      leftIdx++;
-    } else {
-      result.push(right[rightIdx]);
+  while(result.length !== left.length + right.length) {
+    let elem = left[leftIdx];
+
+    if (!elem || right[rightIdx] < left[leftIdx]) {
+      elem = right[rightIdx];
       rightIdx++;
+    } else {
+      leftIdx++;
     }
+    result.push(elem);
   }
-  
-  return result
-    .concat(left.slice(leftIdx))
-    .concat(right.slice(rightIdx));
+
+  return result;
 }
 
-console.log(merge_sort([8, 4, 7, 1, 9, 3, 5, 2]))
+console.log(merge_sort([8, 4, 7, 1, 9, 3, 5, 2, 11]))
