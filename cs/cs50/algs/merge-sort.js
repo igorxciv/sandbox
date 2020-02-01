@@ -24,7 +24,6 @@ function merge(left, right) {
     }
     result.push(elem);
   }
-
   return result;
 }
 
