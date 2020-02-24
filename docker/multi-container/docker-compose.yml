@@ -35,3 +35,8 @@ services:
         volumes:
             - /app/node_modules
             - ./worker:/app
+    nginx:
+        build:
+            dockerfile: Dockerfile.dev
+            context: ./nginx
+        restart: always
