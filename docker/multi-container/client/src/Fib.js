@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 const SeenIndexes = ({ indexes }) => {
@@ -28,8 +28,8 @@ export const Fib = () => {
   };
 
   const fetchIndexes = async () => {
-    const seen = await axios.get("/api/values/all");
-    setSeenIndexes(seen);
+    const {data} = await axios.get("/api/values/all");
+    setSeenIndexes(data);
   };
 
   const handleSubmit = async event => {
